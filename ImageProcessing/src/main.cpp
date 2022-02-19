@@ -11,13 +11,34 @@ Image img("../Resources/Lenna.png");
 Color3* pixelBuffer;
 
 void updatePixelBuffer() {
+    // Update transformed image
     for (int i = 0; i < img.Height(); i++)
     {
         for (int j = 0; j < img.Width(); j++)
         {
-            pixelBuffer[i * 2 * img.Width() + j + img.Width()] = img.LookupT(j, i);
+            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()] = img.LookupT(j, i);
         }
     }
+    // Clear transformed histogram area
+    for (int i = 0; i < img.Height() * 0.5; i++)
+    {
+        for (int j = img.Width(); j < img.Width() * 2; j++)
+        {
+            pixelBuffer[i * 2 * img.Width() + j] = Vector3(1.0f);
+        }
+    }
+
+    // Show transformed histogram
+    float histogramMaxT = img.HistogramMaxT();
+    std::cout << histogramMaxT << std::endl;
+    for (int i = 0; i < 256; i++)
+    {
+        for (int j = 0; j < 0.5 * img.Height() * img.HistogramValueT(i) / histogramMaxT; j++)
+        {
+            pixelBuffer[j * img.Width() * 2 + i + img.Width()] = Vector3(1, 0, 0);
+        }
+    }
+
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -42,14 +63,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 int main() {
     
-    pixelBuffer = new Vector3[(2 * img.Width()) * img.Height()];
+    pixelBuffer = new Vector3[(2 * img.Width()) * (1.5 * img.Height())];
 
     // Load image and save it
-    img.SaveHDR("../Resources/test.hdr");
+    //img.SaveHDR("../Resources/test.hdr");
 
     // Initialize the library
-    if (!glfwInit())
-        return -1;
+    if (!glfwInit()) return -1;
 
     // Set all the required options for GLFW 
     //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -60,7 +80,7 @@ int main() {
     //glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
     // Create a windowed mode window and its OpenGL context
-    GLFWwindow* window = glfwCreateWindow(2 * img.Width(), img.Height(), "AIM: Monadic Operations", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(2 * img.Width(), 1.5 * img.Height(), "AIM: Monadic Operations", nullptr, nullptr);
 
     if (window == nullptr)
     {
@@ -89,15 +109,40 @@ int main() {
     // Define the viewport dimensions 
     //glViewport(0, 0, screenWidth, screenHeight);
 
+
+    // Clear histogram area
+    for (int i = 0; i < img.Height() * 0.5; i++)
+    {
+        for (int j = 0; j < img.Width() * 2; j++)
+        {
+            pixelBuffer[i * 2 * img.Width() + j] = Vector3(1.0f);
+        }
+    }
+
+    // Show histograms
+    float histogramMax = img.HistogramMax();
+    for (int i = 0; i < 256; i++)
+    {
+        for (int j = 0; j < 0.5 * img.Height() * img.HistogramValue(i) / histogramMax; j++)
+        {
+            pixelBuffer[j * img.Width() * 2 + i] = Vector3(1, 0, 0);
+            pixelBuffer[j * img.Width() * 2 + i + img.Width()] = Vector3(1, 0, 0);
+        }
+    }
+
     // Copy images into pixel buffer
     for (int i = 0; i < img.Height(); i++)
     {
         for (int j = 0; j < img.Width(); j++)
         {
-            pixelBuffer[i * 2 * img.Width() + j] = img.Lookup(j, i);
-            pixelBuffer[i * 2 * img.Width() + j + img.Width()] = img.LookupT(j, i);
+            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j] = img.Lookup(j, i);
+            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()] = img.LookupT(j, i);
         }
     }
+
+
+
+
     
 
     // Loop until the user closes the window
@@ -114,7 +159,7 @@ int main() {
 
         // Draw OpenGL 
         //glDrawPixels(img.Width(), img.Height(), GL_RGB, GL_UNSIGNED_BYTE, pixelBuffer);
-        glDrawPixels(2 * img.Width(), img.Height(), GL_RGB, GL_FLOAT, pixelBuffer);
+        glDrawPixels(2 * img.Width(), 1.5 * img.Height(), GL_RGB, GL_FLOAT, pixelBuffer);
 
         glfwSwapBuffers(window);
     }

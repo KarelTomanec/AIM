@@ -24,10 +24,15 @@ Image::Image(const char* fileName) {
     }
 
     distribution[0] = histogram[0];
+    histogramMax = histogram[0];
+    histogramT[0] = histogram[0];
     for (int i = 1; i < 256; i++)
     {
         distribution[i] = distribution[i - 1] + histogram[i];
+        histogramT[i] = histogram[i];
+        histogramMax = std::max(histogram[i], histogramMax);
     }
+    histogramMaxT = histogramMax;
 
     if (!data) {
         std::cerr << "ERROR: Could not load texture image file '" << fileName << "'.\n";
@@ -72,7 +77,25 @@ Color3 Image::LookupT(int x, int y) {
 }
 
 
+int Image::HistogramValue(int intensity) {
+    return histogram[intensity];
+}
+
+int Image::HistogramValueT(int intensity) {
+    return histogramT[intensity];
+}
+
+int Image::HistogramMax() {
+    return histogramMax;
+}
+
+int Image::HistogramMaxT() {
+    return histogramMaxT;
+}
+
 void Image::GammaCorrection() {
+    std::fill(histogramT, histogramT + 256, 0);
+    histogramMaxT = 0;
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
@@ -80,11 +103,16 @@ void Image::GammaCorrection() {
             dataT[i * width + j].x = std::sqrtf(data[i * width + j].x);
             dataT[i * width + j].y = std::sqrtf(data[i * width + j].y);
             dataT[i * width + j].z = std::sqrtf(data[i * width + j].z);
+            int brightness = static_cast<int>(255.99f * dataT[i * width + j].x);
+            histogramT[brightness] += 1;
+            histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
 }
 
 void Image::EqualizeHistogram() {
+    std::fill(histogramT, histogramT + 256, 0);
+    histogramMaxT = 0;
     float pixelCount = width * height;
     for (int i = 0; i < height; i++)
     {
@@ -93,12 +121,17 @@ void Image::EqualizeHistogram() {
             dataT[i * width + j].x = static_cast<float>(distribution[static_cast<int>(data[i * width + j].x * 255.99f)]) / pixelCount;
             dataT[i * width + j].y = static_cast<float>(distribution[static_cast<int>(data[i * width + j].y * 255.99f)]) / pixelCount;
             dataT[i * width + j].z = static_cast<float>(distribution[static_cast<int>(data[i * width + j].z * 255.99f)]) / pixelCount;
+            int brightness = static_cast<int>(255.99f * dataT[i * width + j].x);
+            histogramT[brightness] += 1;
+            histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
 }
 
 
 void Image::Threshold() {
+    std::fill(histogramT, histogramT + 256, 0);
+    histogramMaxT = 0;
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
@@ -106,12 +139,17 @@ void Image::Threshold() {
             dataT[i * width + j].x = data[i * width + j].x > 0.5f ? 1.0f : 0.0f;
             dataT[i * width + j].y = data[i * width + j].y > 0.5f ? 1.0f : 0.0f;
             dataT[i * width + j].z = data[i * width + j].z > 0.5f ? 1.0f : 0.0f;
+            int brightness = static_cast<int>(255.99f * dataT[i * width + j].x);
+            histogramT[brightness] += 1;
+            histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
 }
 
 
 void Image::Negative() {
+    std::fill(histogramT, histogramT + 256, 0);
+    histogramMaxT = 0;
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
@@ -119,6 +157,9 @@ void Image::Negative() {
             dataT[i * width + j].x = 1.0f - data[i * width + j].x;
             dataT[i * width + j].y = 1.0f - data[i * width + j].y;
             dataT[i * width + j].z = 1.0f - data[i * width + j].z;
+            int brightness = static_cast<int>(255.99f * dataT[i * width + j].x);
+            histogramT[brightness] += 1;
+            histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
 }
