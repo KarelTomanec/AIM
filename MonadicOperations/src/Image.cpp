@@ -24,11 +24,14 @@ Image::Image(const char* fileName) {
     }
 
     distribution[0] = histogram[0];
+    distributionT[0] = histogram[0];
+
     histogramMax = histogram[0];
     histogramT[0] = histogram[0];
     for (int i = 1; i < 256; i++)
     {
         distribution[i] = distribution[i - 1] + histogram[i];
+        distributionT[i] = distribution[i];
         histogramT[i] = histogram[i];
         histogramMax = std::max(histogram[i], histogramMax);
     }
@@ -85,6 +88,15 @@ int Image::HistogramValueT(int intensity) {
     return histogramT[intensity];
 }
 
+
+int Image::DistributionValue(int intensity) {
+    return distribution[intensity];
+}
+
+int Image::DistributionValueT(int intensity) {
+    return distributionT[intensity];
+}
+
 int Image::HistogramMax() {
     return histogramMax;
 }
@@ -108,6 +120,14 @@ void Image::GammaCorrection() {
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
+
+    // Update CDF
+    std::fill(distributionT, distributionT + 256, 0);
+    distributionT[0] = histogramT[0];
+    for (int i = 1; i < 256; i++)
+    {
+        distributionT[i] = distributionT[i - 1] + histogramT[i];
+    }
 }
 
 void Image::EqualizeHistogram() {
@@ -125,6 +145,14 @@ void Image::EqualizeHistogram() {
             histogramT[brightness] += 1;
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
+    }
+
+    // Update CDF
+    std::fill(distributionT, distributionT + 256, 0);
+    distributionT[0] = histogramT[0];
+    for (int i = 1; i < 256; i++)
+    {
+        distributionT[i] = distributionT[i - 1] + histogramT[i];
     }
 }
 
@@ -144,6 +172,14 @@ void Image::Threshold() {
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
+
+    // Update CDF
+    std::fill(distributionT, distributionT + 256, 0);
+    distributionT[0] = histogramT[0];
+    for (int i = 1; i < 256; i++)
+    {
+        distributionT[i] = distributionT[i - 1] + histogramT[i];
+    }
 }
 
 
@@ -161,5 +197,86 @@ void Image::Negative() {
             histogramT[brightness] += 1;
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
+    }
+
+    // Update CDF
+    std::fill(distributionT, distributionT + 256, 0);
+    distributionT[0] = histogramT[0];
+    for (int i = 1; i < 256; i++)
+    {
+        distributionT[i] = distributionT[i - 1] + histogramT[i];
+    }
+}
+
+
+void Image::Quantization() {
+    float q = 8.0f;
+    std::fill(histogramT, histogramT + 256, 0);
+    histogramMaxT = 0;
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            dataT[i * width + j].x = std::floor(int(data[i * width + j].x * q)) / q;
+            dataT[i * width + j].y = std::floor(int(data[i * width + j].y * q)) / q;
+            dataT[i * width + j].z = std::floor(int(data[i * width + j].z * q)) / q;
+            int brightness = static_cast<int>(255.99f * dataT[i * width + j].x);
+            histogramT[brightness] += 1;
+            histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
+        }
+    }
+
+    // Update CDF
+    std::fill(distributionT, distributionT + 256, 0);
+    distributionT[0] = histogramT[0];
+    for (int i = 1; i < 256; i++)
+    {
+        distributionT[i] = distributionT[i - 1] + histogramT[i];
+    }
+}
+
+
+void Image::NonLinearContrast() {
+    float alpha = 0.5f;
+    float gamma = 1.0f / (1.0f - alpha);
+    std::fill(histogramT, histogramT + 256, 0);
+    histogramMaxT = 0;
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            if (data[i * width + j].x < 0.5f) {
+                dataT[i * width + j].x = 0.5f * std::powf(2.0f * data[i * width + j].x, gamma);
+            }
+            else {
+                dataT[i * width + j].x = 1.0f - 0.5f * std::powf(2.0f - 2.0f * data[i * width + j].x, gamma);
+            }
+
+            if (data[i * width + j].y < 0.5f) {
+                dataT[i * width + j].y = 0.5f * std::powf(2.0f * data[i * width + j].y, gamma);
+            }
+            else {
+                dataT[i * width + j].y = 1.0f - 0.5f * std::powf(2.0f - 2.0f * data[i * width + j].y, gamma);
+            }
+
+            if (data[i * width + j].z < 0.5f) {
+                dataT[i * width + j].z = 0.5f * std::powf(2.0f * data[i * width + j].z, gamma);
+            }
+            else {
+                dataT[i * width + j].z = 1.0f - 0.5f * std::powf(2.0f - 2.0f * data[i * width + j].z, gamma);
+            }
+
+            int brightness = static_cast<int>(255.99f * dataT[i * width + j].x);
+            histogramT[brightness] += 1;
+            histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
+        }
+    }
+
+    // Update CDF
+    std::fill(distributionT, distributionT + 256, 0);
+    distributionT[0] = histogramT[0];
+    for (int i = 1; i < 256; i++)
+    {
+        distributionT[i] = distributionT[i - 1] + histogramT[i];
     }
 }

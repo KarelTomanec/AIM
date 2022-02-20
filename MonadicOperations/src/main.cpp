@@ -30,12 +30,21 @@ void updatePixelBuffer() {
 
     // Show transformed histogram
     float histogramMaxT = img.HistogramMaxT();
-    std::cout << histogramMaxT << std::endl;
     for (int i = 0; i < 256; i++)
     {
         for (int j = 0; j < 0.5 * img.Height() * img.HistogramValueT(i) / histogramMaxT; j++)
         {
-            pixelBuffer[j * img.Width() * 2 + i + img.Width()] = Vector3(1, 0, 0);
+            pixelBuffer[j * img.Width() * 2 + i + img.Width()] = Vector3(0, 0, 1);
+        }
+    }
+
+    // Show transformed distribution
+    float distributionMax = img.Height() * img.Width();
+    for (int i = 0; i < 256; i++)
+    {
+        for (int j = 0; j < 0.5 * img.Height() * img.DistributionValueT(i) / distributionMax; j++)
+        {
+            pixelBuffer[j * img.Width() * 2 + i + img.Width() + int(img.Width() * 0.5)] = Vector3(1, 0, 0);
         }
     }
 
@@ -59,9 +68,26 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         img.Negative();
         updatePixelBuffer();
     }
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
+        img.Quantization();
+        updatePixelBuffer();
+    }
+
+    if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+        img.NonLinearContrast();
+        updatePixelBuffer();
+    }
 }
 
 int main() {
+
+    std::cout << "Keyboard controls:" << std::endl;
+    std::cout << "[T] Threshold" << std::endl;
+    std::cout << "[G] Gamma correction" << std::endl;
+    std::cout << "[E] Histogram equalization" << std::endl;
+    std::cout << "[N] Negative" << std::endl;
+    std::cout << "[Q] Quantization" << std::endl;
+    std::cout << "[C] Non-linear contrast" << std::endl;
     
     pixelBuffer = new Vector3[(2 * img.Width()) * (1.5 * img.Height())];
 
@@ -125,8 +151,19 @@ int main() {
     {
         for (int j = 0; j < 0.5 * img.Height() * img.HistogramValue(i) / histogramMax; j++)
         {
-            pixelBuffer[j * img.Width() * 2 + i] = Vector3(1, 0, 0);
-            pixelBuffer[j * img.Width() * 2 + i + img.Width()] = Vector3(1, 0, 0);
+            pixelBuffer[j * img.Width() * 2 + i] = Vector3(0, 0, 1);
+            pixelBuffer[j * img.Width() * 2 + i + img.Width()] = Vector3(0, 0, 1);
+        }
+    }
+
+    // Show distributions
+    float distributionMax = img.Height() * img.Width();
+    for (int i = 0; i < 256; i++)
+    {
+        for (int j = 0; j < 0.5 * img.Height() * img.DistributionValue(i) / distributionMax; j++)
+        {
+            pixelBuffer[j * img.Width() * 2 + i + int(img.Width() * 0.5)] = Vector3(1, 0, 0);
+            pixelBuffer[j * img.Width() * 2 + i + img.Width() + int(img.Width() * 0.5)] = Vector3(1, 0, 0);
         }
     }
 

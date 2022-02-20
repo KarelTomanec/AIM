@@ -27,6 +27,10 @@ public:
 
 	int HistogramValueT(int intensity);
 
+	int DistributionValue(int intensity);
+
+	int DistributionValueT(int intensity);
+
 	int HistogramMax();
 
 	int HistogramMaxT();
@@ -39,11 +43,16 @@ public:
 
 	void Negative();
 
+	void Quantization();
+
+	void NonLinearContrast();
+
 private:
 
 	int histogram[256];
 	int histogramT[256];
 	int distribution[256];
+	int distributionT[256];
 	int componentsPerPixel = 3;
 	int histogramMax;
 	int histogramMaxT;
