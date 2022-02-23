@@ -2,63 +2,151 @@
 
 #include "Vector3.hpp"
 
+/// <summary>
+/// Class representing RGB image.
+/// </summary>
 class Image {
 public:
 
-	Image(const char* fileNName);
+	/// <summary>
+	/// Load image using stb_image library, make it grayscale and store it as Vector3 array. This constructor also creates a CDF.
+	/// </summary>
+	/// <param name="fileName">file path</param>
+	Image(const char* fileName);
 
+	/// <summary>
+	/// Free both original image and transformed image.
+	/// </summary>
 	~Image();
 
+	/// <summary>
+	/// Save transformed image as HDR file.
+	/// </summary>
+	/// <param name="fileName">file path</param>
 	void SaveHDR(const char* fileName);
 
+	/// <summary>
+	/// Save transformed image as PNG file.
+	/// </summary>
+	/// <param name="fileName">file path</param>
 	void SavePNG(const char* fileName);
 
+	/// <summary>
+	/// Return width of the image.
+	/// </summary>
+	/// <returns>width</returns>
 	int Width();
 
+	/// <summary>
+	/// Return height of the image.
+	/// </summary>
+	/// <returns>height</returns>
 	int Height();
 
+	/// <summary>
+	/// Return pointer do the original image array.
+	/// </summary>
+	/// <returns>data pointer</returns>
 	Color3* DataPtr();
 
+	/// <summary>
+	/// Get RGB value of the original image at a given position
+	/// </summary>
+	/// <param name="x">horizontal position</param>
+	/// <param name="y">vertical position</param>
+	/// <returns>RGB value</returns>
 	Color3 Lookup(int x, int y);
 
+	/// <summary>
+	/// Get RGB value of the original image at a given position
+	/// </summary>
+	/// <param name="x">horizontal position</param>
+	/// <param name="y">vertical position</param>
+	/// <returns>RGB value</returns>
 	Color3 LookupT(int x, int y);
 
+	/// <summary>
+	/// Return the number of pixels of a given intensity of the original image.
+	/// </summary>
+	/// <param name="intensity">integer intensity (0-255)</param>
+	/// <returns>number of pixels</returns>
 	int HistogramValue(int intensity);
 
+	/// <summary>
+	/// Return the number of pixels of a given intensity of the transformed image.
+	/// </summary>
+	/// <param name="intensity">integer intensity (0-255)</param>
+	/// <returns>number of pixels</returns>
 	int HistogramValueT(int intensity);
 
+	/// <summary>
+	/// Return the cumulative histogram value of a given intensity of the original image.
+	/// </summary>
+	/// <param name="intensity">integer intensity (0-255)</param>
+	/// <returns>cumulative value</returns>
 	int DistributionValue(int intensity);
 
+	/// <summary>
+	/// Return the cumulative histogram value of a given intensity of the transformed image.
+	/// </summary>
+	/// <param name="intensity">integer intensity (0-255)</param>
+	/// <returns>cumulative value</returns>
 	int DistributionValueT(int intensity);
 
+	/// <summary>
+	/// Return the maximum of the histogram of the original image.
+	/// </summary>
+	/// <returns>maximal</returns>
 	int HistogramMax();
 
+	/// <summary>
+	/// Return the maximum of the histogram of the transformed image.
+	/// </summary>
+	/// <returns>maximal</returns>
 	int HistogramMaxT();
 
+	/// <summary>
+	/// Perform gamma correction on the original image and store it to the transformed image.
+	/// </summary>
 	void GammaCorrection();
 
+	/// <summary>
+	/// Perform histogram equalization on the original image and store it to the transformed image.
+	/// </summary>
 	void EqualizeHistogram();
 
+	/// <summary>
+	/// Perform threshold transformation on the original image and store it to the transformed image.
+	/// </summary>
 	void Threshold();
 
+	/// <summary>
+	/// Perform negative intensity transformation on the original image and store it to the transformed image.
+	/// </summary>
 	void Negative();
 
+	/// <summary>
+	/// Perform quantization on the original image and store it to the transformed image.
+	/// </summary>
 	void Quantization();
 
+	/// <summary>
+	/// Perform non-linear contrast transformation on the original image and store it to the transformed image.
+	/// </summary>
 	void NonLinearContrast();
 
 private:
 
-	int histogram[256];
-	int histogramT[256];
-	int distribution[256];
-	int distributionT[256];
-	int componentsPerPixel = 3;
-	int histogramMax;
-	int histogramMaxT;
-	int width;
-	int height;
-	Color3* data;
-	Color3* dataT;
+	int histogram[256]; // Histogram of the original image
+	int histogramT[256]; // Histogram of the transformed image
+	int distribution[256]; // CDF of the original image (not normalized)
+	int distributionT[256]; // CDF of the transformed image (not normalized)
+	int componentsPerPixel = 3; // Number of channels in one pixel
+	int histogramMax; // Maximum in the histogram of the original image
+	int histogramMaxT; // Maximum in the histogram of the transformed image
+	int width; // Image width
+	int height; // Image height
+	Color3* data; // Pointer to the original image data
+	Color3* dataT; // Pointer to the transformed image data
 
 };

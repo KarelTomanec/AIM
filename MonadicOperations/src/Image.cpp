@@ -51,11 +51,11 @@ Image::~Image() {
 
 
 void Image::SaveHDR(const char* fileName) {
-    stbi_write_hdr(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(data));
+    stbi_write_hdr(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(dataT));
 }
 
 void Image::SavePNG(const char* fileName) {
-    stbi_write_png(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(data), componentsPerPixel * width);
+    stbi_write_png(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(dataT), componentsPerPixel * width);
 }
 
 int Image::Width() {
