@@ -167,6 +167,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Distribution.hpp" />
     <ClInclude Include="src\Image.hpp" />
     <ClInclude Include="src\Vector3.hpp" />
   </ItemGroup>

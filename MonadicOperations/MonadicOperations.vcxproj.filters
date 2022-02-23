@@ -29,5 +29,8 @@
     <ClInclude Include="src\Vector3.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Distribution.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

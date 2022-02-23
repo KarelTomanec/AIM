@@ -6,9 +6,17 @@
 #include <stb_image_write.h>
 
 Image::Image(const char* fileName) {
+    // Load image using stb_image library
     stbi_set_flip_vertically_on_load(true);
     data = reinterpret_cast<Color3*>(stbi_loadf(
         fileName, &width, &height, &componentsPerPixel, 0));
+
+    if (!data) {
+        std::cerr << "ERROR: Could not load texture image file '" << fileName << "'.\n";
+        width = height = 0;
+        return;
+    }
+
     dataT = new Color3[width * height];
 
     // Make grayscale image
@@ -36,12 +44,6 @@ Image::Image(const char* fileName) {
         histogramMax = std::max(histogram[i], histogramMax);
     }
     histogramMaxT = histogramMax;
-
-    if (!data) {
-        std::cerr << "ERROR: Could not load texture image file '" << fileName << "'.\n";
-        width = height = 0;
-        return;
-    }
 }
 
 Image::~Image() {
