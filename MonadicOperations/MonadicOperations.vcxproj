@@ -163,11 +163,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Distribution.cpp" />
     <ClCompile Include="src\Image.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Distribution.hpp" />
+    <ClInclude Include="src\Distribution.hpp" />
     <ClInclude Include="src\Image.hpp" />
     <ClInclude Include="src\Vector3.hpp" />
   </ItemGroup>

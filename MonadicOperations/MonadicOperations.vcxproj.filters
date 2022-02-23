@@ -21,6 +21,9 @@
     <ClCompile Include="src\Image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Distribution.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Image.hpp">
@@ -29,7 +32,7 @@
     <ClInclude Include="src\Vector3.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Distribution.hpp">
+    <ClInclude Include="src\Distribution.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
