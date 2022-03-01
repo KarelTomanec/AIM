@@ -69,7 +69,7 @@ public:
 	}
 
 	float Y() {
-		return 0.2126f * x + 0.7152f * y + 0.0722 * z;
+		return 0.2126f * x + 0.7152f * y + 0.0722f * z;
 	}
 
 };

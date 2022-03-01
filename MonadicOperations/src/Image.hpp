@@ -15,9 +15,12 @@ public:
 	Image(const char* fileName);
 
 	/// <summary>
-	/// Free both original image and transformed image.
+	/// Not copyable or movable
 	/// </summary>
-	~Image();
+	Image(const Image&) = delete;
+	void operator=(const Image&) = delete;
+	Image(Image&&) = delete;
+	Image& operator=(Image&&) = delete;
 
 	/// <summary>
 	/// Save transformed image as HDR file.
@@ -84,14 +87,14 @@ public:
 	/// </summary>
 	/// <param name="intensity">integer intensity (0-255)</param>
 	/// <returns>cumulative value</returns>
-	int DistributionValue(int intensity);
+	float DistributionValue(int intensity);
 
 	/// <summary>
 	/// Return the cumulative histogram value of a given intensity of the transformed image.
 	/// </summary>
 	/// <param name="intensity">integer intensity (0-255)</param>
 	/// <returns>cumulative value</returns>
-	int DistributionValueT(int intensity);
+	float DistributionValueT(int intensity);
 
 	/// <summary>
 	/// Return the maximum of the histogram of the original image.
@@ -137,16 +140,21 @@ public:
 
 private:
 
+	/// <summary>
+	/// Update CDF of after image transformation
+	/// </summary>
+	void UpdateTransformedCDF();
+
 	int histogram[256]; // Histogram of the original image
 	int histogramT[256]; // Histogram of the transformed image
-	int distribution[256]; // CDF of the original image (not normalized)
-	int distributionT[256]; // CDF of the transformed image (not normalized)
+	float distribution[256]; // CDF of the original image (not normalized)
+	float distributionT[256]; // CDF of the transformed image (not normalized)
 	int componentsPerPixel = 3; // Number of channels in one pixel
 	int histogramMax; // Maximum in the histogram of the original image
 	int histogramMaxT; // Maximum in the histogram of the transformed image
 	int width; // Image width
 	int height; // Image height
-	Color3* data; // Pointer to the original image data
-	Color3* dataT; // Pointer to the transformed image data
+	std::unique_ptr<Color3[]> data; // Pointer to the original image data
+	std::unique_ptr<Color3[]> dataT; // Pointer to the transformed image data
 
 };

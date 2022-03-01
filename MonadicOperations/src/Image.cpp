@@ -8,8 +8,8 @@
 Image::Image(const char* fileName) {
     // Load image using stb_image library
     stbi_set_flip_vertically_on_load(true);
-    data = reinterpret_cast<Color3*>(stbi_loadf(
-        fileName, &width, &height, &componentsPerPixel, 0));
+    data = std::unique_ptr<Color3[]>(reinterpret_cast<Color3*>(stbi_loadf(
+        fileName, &width, &height, &componentsPerPixel, 0)));
 
     if (!data) {
         std::cerr << "ERROR: Could not load texture image file '" << fileName << "'.\n";
@@ -17,9 +17,9 @@ Image::Image(const char* fileName) {
         return;
     }
 
-    dataT = new Color3[width * height];
+    dataT = std::make_unique<Color3[]>(width * height);
 
-    // Make grayscale image
+    // Make grayscale image and create integer histogram
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
@@ -39,25 +39,26 @@ Image::Image(const char* fileName) {
     for (int i = 1; i < 256; i++)
     {
         distribution[i] = distribution[i - 1] + histogram[i];
-        distributionT[i] = distribution[i];
         histogramT[i] = histogram[i];
         histogramMax = std::max(histogram[i], histogramMax);
     }
     histogramMaxT = histogramMax;
-}
 
-Image::~Image() {
-    delete[] data;
-    delete[] dataT;
+    // Normalize
+    float histogramIntegral = distribution[255];
+    for (int i = 0; i < 256; i++)
+    {
+        distribution[i] /= histogramIntegral;
+        distributionT[i] = distribution[i];
+    }
 }
-
 
 void Image::SaveHDR(const char* fileName) {
-    stbi_write_hdr(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(dataT));
+    stbi_write_hdr(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(dataT.get()));
 }
 
 void Image::SavePNG(const char* fileName) {
-    stbi_write_png(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(dataT), componentsPerPixel * width);
+    stbi_write_png(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(dataT.get()), componentsPerPixel * width);
 }
 
 int Image::Width() {
@@ -69,7 +70,7 @@ int Image::Height() {
 }
 
 Color3* Image::DataPtr() {
-    return data;
+    return data.get();
 }
 
 Color3 Image::Lookup(int x, int y) {
@@ -81,7 +82,6 @@ Color3 Image::LookupT(int x, int y) {
     return dataT[y * width + x];
 }
 
-
 int Image::HistogramValue(int intensity) {
     return histogram[intensity];
 }
@@ -90,12 +90,11 @@ int Image::HistogramValueT(int intensity) {
     return histogramT[intensity];
 }
 
-
-int Image::DistributionValue(int intensity) {
+float Image::DistributionValue(int intensity) {
     return distribution[intensity];
 }
 
-int Image::DistributionValueT(int intensity) {
+float Image::DistributionValueT(int intensity) {
     return distributionT[intensity];
 }
 
@@ -122,40 +121,27 @@ void Image::GammaCorrection() {
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
-
     // Update CDF
-    std::fill(distributionT, distributionT + 256, 0);
-    distributionT[0] = histogramT[0];
-    for (int i = 1; i < 256; i++)
-    {
-        distributionT[i] = distributionT[i - 1] + histogramT[i];
-    }
+    UpdateTransformedCDF();
 }
 
 void Image::EqualizeHistogram() {
     std::fill(histogramT, histogramT + 256, 0);
     histogramMaxT = 0;
-    float pixelCount = width * height;
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
         {
-            dataT[i * width + j].x = static_cast<float>(distribution[static_cast<int>(data[i * width + j].x * 255.99f)]) / pixelCount;
-            dataT[i * width + j].y = static_cast<float>(distribution[static_cast<int>(data[i * width + j].y * 255.99f)]) / pixelCount;
-            dataT[i * width + j].z = static_cast<float>(distribution[static_cast<int>(data[i * width + j].z * 255.99f)]) / pixelCount;
+            dataT[i * width + j].x = distribution[static_cast<int>(data[i * width + j].x * 255.99f)];
+            dataT[i * width + j].y = distribution[static_cast<int>(data[i * width + j].y * 255.99f)];
+            dataT[i * width + j].z = distribution[static_cast<int>(data[i * width + j].z * 255.99f)];
             int brightness = static_cast<int>(255.99f * dataT[i * width + j].x);
             histogramT[brightness] += 1;
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
-
     // Update CDF
-    std::fill(distributionT, distributionT + 256, 0);
-    distributionT[0] = histogramT[0];
-    for (int i = 1; i < 256; i++)
-    {
-        distributionT[i] = distributionT[i - 1] + histogramT[i];
-    }
+    UpdateTransformedCDF();
 }
 
 
@@ -174,16 +160,9 @@ void Image::Threshold() {
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
-
     // Update CDF
-    std::fill(distributionT, distributionT + 256, 0);
-    distributionT[0] = histogramT[0];
-    for (int i = 1; i < 256; i++)
-    {
-        distributionT[i] = distributionT[i - 1] + histogramT[i];
-    }
+    UpdateTransformedCDF();
 }
-
 
 void Image::Negative() {
     std::fill(histogramT, histogramT + 256, 0);
@@ -200,16 +179,9 @@ void Image::Negative() {
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
-
     // Update CDF
-    std::fill(distributionT, distributionT + 256, 0);
-    distributionT[0] = histogramT[0];
-    for (int i = 1; i < 256; i++)
-    {
-        distributionT[i] = distributionT[i - 1] + histogramT[i];
-    }
+    UpdateTransformedCDF();
 }
-
 
 void Image::Quantization() {
     float q = 8.0f;
@@ -227,16 +199,9 @@ void Image::Quantization() {
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
-
     // Update CDF
-    std::fill(distributionT, distributionT + 256, 0);
-    distributionT[0] = histogramT[0];
-    for (int i = 1; i < 256; i++)
-    {
-        distributionT[i] = distributionT[i - 1] + histogramT[i];
-    }
+    UpdateTransformedCDF();
 }
-
 
 void Image::NonLinearContrast() {
     float alpha = 0.5f;
@@ -273,12 +238,21 @@ void Image::NonLinearContrast() {
             histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
         }
     }
-
     // Update CDF
+    UpdateTransformedCDF();
+}
+
+void Image::UpdateTransformedCDF() {
     std::fill(distributionT, distributionT + 256, 0);
     distributionT[0] = histogramT[0];
     for (int i = 1; i < 256; i++)
     {
         distributionT[i] = distributionT[i - 1] + histogramT[i];
+    }
+    // Normalize
+    float histogramIntegral = distributionT[255];
+    for (int i = 0; i < 256; i++)
+    {
+        distributionT[i] /= histogramIntegral;
     }
 }

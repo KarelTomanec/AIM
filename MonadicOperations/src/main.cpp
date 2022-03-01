@@ -8,7 +8,7 @@
 // Load image
 Image img("../Resources/Lenna.png");
 
-Color3* pixelBuffer;
+std::unique_ptr<Color3[]> pixelBuffer;
 
 void updatePixelBuffer() {
     // Update transformed image
@@ -42,7 +42,7 @@ void updatePixelBuffer() {
     float distributionMax = img.Height() * img.Width();
     for (int i = 0; i < 256; i++)
     {
-        for (int j = 0; j < 0.5 * img.Height() * img.DistributionValueT(i) / distributionMax; j++)
+        for (int j = 0; j < 0.5 * img.Height() * img.DistributionValueT(i); j++)
         {
             pixelBuffer[j * img.Width() * 2 + i + img.Width() + int(img.Width() * 0.5)] = Vector3(1, 0, 0);
         }
@@ -90,7 +90,7 @@ int main() {
     std::cout << "[Q] Quantization" << std::endl;
     std::cout << "[C] Non-linear contrast" << std::endl;
     
-    pixelBuffer = new Vector3[(2 * img.Width()) * (1.5 * img.Height())];
+    pixelBuffer = std::make_unique<Color3[]>((2 * img.Width()) * (1.5 * img.Height()));
 
     // Load image and save it
     //img.SaveHDR("../Resources/test.hdr");
@@ -141,7 +141,7 @@ int main() {
     float distributionMax = img.Height() * img.Width();
     for (int i = 0; i < 256; i++)
     {
-        for (int j = 0; j < 0.5 * img.Height() * img.DistributionValue(i) / distributionMax; j++)
+        for (int j = 0; j < 0.5 * img.Height() * img.DistributionValue(i); j++)
         {
             pixelBuffer[j * img.Width() * 2 + i + int(img.Width() * 0.5)] = Vector3(1, 0, 0);
             pixelBuffer[j * img.Width() * 2 + i + img.Width() + int(img.Width() * 0.5)] = Vector3(1, 0, 0);
@@ -171,15 +171,12 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw OpenGL 
-        //glDrawPixels(img.Width(), img.Height(), GL_RGB, GL_UNSIGNED_BYTE, pixelBuffer);
-        glDrawPixels(2 * img.Width(), 1.5 * img.Height(), GL_RGB, GL_FLOAT, pixelBuffer);
+        glDrawPixels(2 * img.Width(), 1.5 * img.Height(), GL_RGB, GL_FLOAT, pixelBuffer.get());
 
         glfwSwapBuffers(window);
     }
 
     glfwTerminate();
-
-    delete[] pixelBuffer;
 
     return EXIT_SUCCESS;
 }
