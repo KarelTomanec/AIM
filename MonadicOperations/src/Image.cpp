@@ -54,7 +54,16 @@ Image::Image(const char* fileName) {
 }
 
 void Image::SaveHDR(const char* fileName) {
-    stbi_write_hdr(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(dataT.get()));
+    // Flip vertically
+    std::unique_ptr<Color3[]> tmp(new Color3[width * height]);
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            tmp[i * width + j] = dataT[(height - i - 1) * width + j];
+        }
+    }
+    stbi_write_hdr(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(tmp.get()));
 }
 
 void Image::SavePNG(const char* fileName) {

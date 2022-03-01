@@ -73,11 +73,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         img.Quantization();
         updatePixelBuffer();
     }
-
     if (key == GLFW_KEY_C && action == GLFW_PRESS) {
         img.NonLinearContrast();
         updatePixelBuffer();
     }
+    if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+        img.SaveHDR("../Resources/output.hdr");
+        std::cout << "Transformed image saved as 'output.hdr'\n";
+    }
+
 }
 
 int main() {
@@ -89,11 +93,10 @@ int main() {
     std::cout << "[N] Negative" << std::endl;
     std::cout << "[Q] Quantization" << std::endl;
     std::cout << "[C] Non-linear contrast" << std::endl;
+    std::cout << "[S] Save transformed image" << std::endl;
     
     pixelBuffer = std::make_unique<Color3[]>((2 * img.Width()) * (1.5 * img.Height()));
 
-    // Load image and save it
-    //img.SaveHDR("../Resources/test.hdr");
 
     // Initialize the library
     if (!glfwInit()) return -1;
