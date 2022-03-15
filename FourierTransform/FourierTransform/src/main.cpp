@@ -1,5 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <fftw3.h>
+
 #include "Image.hpp"
 
 // std
@@ -85,6 +87,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 int main() {
+
+    fftw_plan_dft_2d(int n0, int n1,
+        fftw_complex * in, fftw_complex * out,
+        int sign, unsigned flags);
 
     std::cout << "Keyboard controls:" << std::endl;
     std::cout << "[T] Threshold" << std::endl;
