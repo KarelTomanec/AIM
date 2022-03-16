@@ -1,6 +1,5 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <fftw3.h>
 
 #include "Image.hpp"
 
@@ -9,6 +8,8 @@
 
 // Load image
 Image img("../Resources/Lenna.png");
+//Image img("../Resources/5_cam_original.png");
+//Image img("../Resources/5_input_cam.png");
 
 std::unique_ptr<Color3[]> pixelBuffer;
 
@@ -83,14 +84,27 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         img.SaveHDR("../Resources/output.hdr");
         std::cout << "Transformed image saved as 'output.hdr'\n";
     }
+    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+        img.FFT();
+        updatePixelBuffer();
+    }
+    if (key == GLFW_KEY_H && action == GLFW_PRESS) {
+        img.HighPassFilter();
+        updatePixelBuffer();
+    }
+    if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+        img.LowPassFilter();
+        updatePixelBuffer();
+    }
+
+    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+        img.RemoveArtifactsCameraMan();
+        updatePixelBuffer();
+    }
 
 }
 
 int main() {
-
-    fftw_plan_dft_2d(int n0, int n1,
-        fftw_complex * in, fftw_complex * out,
-        int sign, unsigned flags);
 
     std::cout << "Keyboard controls:" << std::endl;
     std::cout << "[T] Threshold" << std::endl;
@@ -99,6 +113,10 @@ int main() {
     std::cout << "[N] Negative" << std::endl;
     std::cout << "[Q] Quantization" << std::endl;
     std::cout << "[C] Non-linear contrast" << std::endl;
+    std::cout << "[F] Fourier transform" << std::endl;
+    std::cout << "[H] High-pass filtering" << std::endl;
+    std::cout << "[L] Low-pass filtering" << std::endl;
+    std::cout << "[A] Remove artifacts (cameraman picture)" << std::endl;
     std::cout << "[S] Save transformed image" << std::endl;
     
     pixelBuffer = std::make_unique<Color3[]>((2 * img.Width()) * (1.5 * img.Height()));
@@ -162,8 +180,8 @@ int main() {
     {
         for (int j = 0; j < img.Width(); j++)
         {
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j] = img.Lookup(j, i);
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()] = img.LookupT(j, i);
+            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j] = Color3(img.Lookup(j, i));
+            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()] = Color3(img.LookupT(j, i));
         }
     }
 

@@ -50,7 +50,7 @@ public:
 	/// Return pointer do the original image array.
 	/// </summary>
 	/// <returns>data pointer</returns>
-	Color3* DataPtr();
+	float* DataPtr();
 
 	/// <summary>
 	/// Get RGB value of the original image at a given position
@@ -58,7 +58,7 @@ public:
 	/// <param name="x">horizontal position</param>
 	/// <param name="y">vertical position</param>
 	/// <returns>RGB value</returns>
-	Color3 Lookup(int x, int y);
+	float Lookup(int x, int y);
 
 	/// <summary>
 	/// Get RGB value of the original image at a given position
@@ -66,7 +66,7 @@ public:
 	/// <param name="x">horizontal position</param>
 	/// <param name="y">vertical position</param>
 	/// <returns>RGB value</returns>
-	Color3 LookupT(int x, int y);
+	float LookupT(int x, int y);
 
 	/// <summary>
 	/// Return the number of pixels of a given intensity of the original image.
@@ -138,6 +138,24 @@ public:
 	/// </summary>
 	void NonLinearContrast();
 
+	/// <summary>
+	/// Perform fourier transform on the original image and store it to the transformed image.
+	/// </summary>
+	void FFT();
+
+	/// <summary>
+	/// Perform high-pass filtering on the original image and store it to the transformed image.
+	/// </summary>
+	void HighPassFilter();
+
+	/// <summary>
+	/// Perform low-pass filtering on the original image and store it to the transformed image.
+	/// </summary>
+	void LowPassFilter();
+
+
+	void RemoveArtifactsCameraMan();
+
 private:
 
 	/// <summary>
@@ -154,7 +172,7 @@ private:
 	int histogramMaxT; // Maximum in the histogram of the transformed image
 	int width; // Image width
 	int height; // Image height
-	std::unique_ptr<Color3[]> data; // Pointer to the original image data
-	std::unique_ptr<Color3[]> dataT; // Pointer to the transformed image data
+	std::unique_ptr<float[]> data; // Pointer to the original image data
+	std::unique_ptr<float[]> dataT; // Pointer to the transformed image data
 
 };
