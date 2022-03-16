@@ -7,9 +7,9 @@
 #include <algorithm>
 
 // Load image
-Image img("../Resources/Lenna.png");
+//Image img("../Resources/Lenna.png");
 //Image img("../Resources/5_cam_original.png");
-//Image img("../Resources/5_input_cam.png");
+Image img("../Resources/5_input_cam.png");
 
 std::unique_ptr<Color3[]> pixelBuffer;
 
