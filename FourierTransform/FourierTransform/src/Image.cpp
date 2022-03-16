@@ -7,6 +7,8 @@
 
 
 #include <fftw3.h>
+#include <vector>
+#include <algorithm>
 
 Image::Image(const char* fileName) {
 	// Load image using stb_image library
@@ -274,14 +276,23 @@ void Image::FFT() {
 
 	// copy the magnitude of the result back into the image
 	double clipMag{ double(width) };
+	double max = 0.0;
 	for (size_t i = 0; i < width * height; i++)
 	{
 		double re = out[i][0];
 		double im = out[i][1];
-		double mag = sqrt(re * re + im * im);
-		double clipped = mag > clipMag ? 1.0 : mag / clipMag;
-		dataT[i] = float(sqrt(clipped));
+		double mag = log(1 + sqrt(re * re + im * im));
+		if (mag > max) {
+			max = mag;
+		}
 
+		dataT[i] = mag;
+
+	}
+
+	for (size_t i = 0; i < width * height; i++)
+	{
+		dataT[i] /= max;
 		int brightness = static_cast<int>(255.99f * dataT[i]);
 		histogramT[brightness] += 1;
 		histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
@@ -294,20 +305,19 @@ void Image::FFT() {
 
 	// Update CDF
 	UpdateTransformedCDF();
-	
-	//histogramMaxT = 0;
-	//for (int i = 0; i < height; i++)
+
+
+	//float* output = new float[width * height / 2];
+	//for (size_t i = 0; i < height / 2; i++)
 	//{
-	//	for (int j = 0; j < width; j++)
+	//	for (size_t j = 0; j < width / 2; j++)
 	//	{
-	//		dataT[i * width + j] = distributionT[static_cast<int>(dataT[i * width + j] * 255.99f)];
-	//		int brightness = static_cast<int>(255.99f * dataT[i * width + j]);
-	//		histogramT[brightness] += 1;
-	//		histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
+	//		output[i * width + j] = dataT[(i + height / 2) * height + j + width / 2];
 	//	}
 	//}
-	//// Update CDF
-	//UpdateTransformedCDF();
+
+	//stbi_write_hdr("../Resources/output.hdr", width / 2, height / 2, 1, output);
+	//delete[] output;
 
 }
 
@@ -333,7 +343,7 @@ void Image::HighPassFilter() {
 	//out[0][1] = 0;
 
 
-		// swap quadrants
+	// swap quadrants
 	int h2 = height / 2;
 	int w2 = width / 2;
 	for (int i = 0; i < h2; i++)
@@ -584,29 +594,53 @@ void Image::RemoveArtifactsCameraMan() {
 	//		out[i * width + j][1] = 0.0;
 	//	}
 	//}
-	for (size_t i = 0; i < height; i += stepY)
-	{
-		for (size_t j = 0; j < width; j += stepX/4)
-		{
-			out[i * width + j][0] = 0.0;
-			out[i * width + j][1] = 0.0;
-		}
-	}
-	for (size_t i = 0; i < height; i += stepY/4)
-	{
-		for (size_t j = 0; j < width; j += stepX)
-		{
-			out[i * width + j][0] = 0.0;
-			out[i * width + j][1] = 0.0;
-		}
-	}
+	fftw_complex* outT = new fftw_complex[width * height];
+	std::memcpy(outT, out, width * height * sizeof(fftw_complex));
 
-	//// copy the magnitude of the result back into the image
+	std::vector<double> vR;
+	vR.reserve(9);
+	std::vector<double> vC;
+	vC.reserve(9);
+	for (int i = 1; i < height - 1; i++)
+	{
+		for (int j = 1; j < width - 1; j++)
+		{
+			double sumR = 0.0;
+			double sumC = 0.0;
+			for (int y = -1; y <= 1; y++) {
+				for (int x = -1; x <= 1; x++) {
+					if (y == 0 && x == 0) continue;
+					vR.push_back(out[(i + y) * width + j + x][0]);
+					vC.push_back(out[(i + y) * width + j + x][1]);
+					sumR += out[(i + y) * width + j + x][0];
+					sumC += out[(i + y) * width + j + x][1];
+				}
+			}
+			//std::sort(vR.begin(), vR.end());
+			//std::sort(vC.begin(), vC.end());
+			//outT[i * width + j][0] = vR.at(4);
+			//outT[i * width + j][1] = vC.at(4);
+			outT[i * width + j][0] = sumR / 8.0;
+			outT[i * width + j][1] = sumC / 8.0;
+			vR.clear();
+			vC.clear();
+		}
+	}
+	//for (size_t i = 0; i < height; i += stepY/12)
+	//{
+	//	for (size_t j = 0; j < width; j += stepX)
+	//	{
+	//		out[i * width + j][0] = 0.0;
+	//		out[i * width + j][1] = 0.0;
+	//	}
+	//}
+
+	// copy the magnitude of the result back into the image
 	//double clipMag{ double(width) };
 	//for (size_t i = 0; i < width * height; i++)
 	//{
-	//	double re = out[i][0];
-	//	double im = out[i][1];
+	//	double re = outT[i][0];
+	//	double im = outT[i][1];
 	//	double mag = sqrt(re * re + im * im);
 	//	double clipped = mag > clipMag ? 1.0 : mag / clipMag;
 	//	dataT[i] = float(sqrt(clipped));
@@ -621,23 +655,23 @@ void Image::RemoveArtifactsCameraMan() {
 	{
 		for (int j = 0; j < w2; j++)
 		{
-			auto tmp13R = out[i * width + j][0];
-			auto tmp13C = out[i * width + j][1];
-			out[i * width + j][0] = out[(i + h2) * width + j + w2][0];
-			out[i * width + j][1] = out[(i + h2) * width + j + w2][1];
-			out[(i + h2) * width + j + w2][0] = tmp13R;
-			out[(i + h2) * width + j + w2][1] = tmp13C;
+			auto tmp13R = outT[i * width + j][0];
+			auto tmp13C = outT[i * width + j][1];
+			outT[i * width + j][0] = outT[(i + h2) * width + j + w2][0];
+			outT[i * width + j][1] = outT[(i + h2) * width + j + w2][1];
+			outT[(i + h2) * width + j + w2][0] = tmp13R;
+			outT[(i + h2) * width + j + w2][1] = tmp13C;
 
-			auto tmp24R = out[(i + h2) * width + j][0];
-			auto tmp24C = out[(i + h2) * width + j][1];
-			out[(i + h2) * width + j][0] = out[i * width + j + w2][0];
-			out[(i + h2) * width + j][1] = out[i * width + j + w2][1];
-			out[i * width + j + w2][0] = tmp24R;
-			out[i * width + j + w2][1] = tmp24C;
+			auto tmp24R = outT[(i + h2) * width + j][0];
+			auto tmp24C = outT[(i + h2) * width + j][1];
+			outT[(i + h2) * width + j][0] = outT[i * width + j + w2][0];
+			outT[(i + h2) * width + j][1] = outT[i * width + j + w2][1];
+			outT[i * width + j + w2][0] = tmp24R;
+			outT[i * width + j + w2][1] = tmp24C;
 		}
 	}
 
-	fftw_plan planBck = fftw_plan_dft_2d(width, height, out, in, FFTW_BACKWARD, FFTW_ESTIMATE);
+	fftw_plan planBck = fftw_plan_dft_2d(width, height, outT, in, FFTW_BACKWARD, FFTW_ESTIMATE);
 	fftw_execute(planBck);
 	fftw_destroy_plan(planBck);
 
@@ -664,6 +698,7 @@ void Image::RemoveArtifactsCameraMan() {
 	fftw_cleanup();
 	delete[] in;
 	delete[] out;
+	delete[] outT;
 
 	// Update CDF
 	UpdateTransformedCDF();
