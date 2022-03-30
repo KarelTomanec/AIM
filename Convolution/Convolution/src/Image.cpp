@@ -9,6 +9,9 @@
 #include <fftw3.h>
 #include <vector>
 #include <algorithm>
+#include <chrono>
+
+using namespace std::chrono;
 
 Image::Image(const char* fileName) {
 	// Load image using stb_image library
@@ -719,6 +722,11 @@ void Image::UpdateTransformedCDF() {
 	}
 }
 
+bool Image::RangeCheck(int x, int y)
+{
+	if (x < 0 || x > width || y < 0 || y > height) return false;
+	return true;
+}
 
 void Image::ApplyGaussianFilter(GaussianKernel2D& kernel) {
 	int size = kernel.GetSize();
@@ -728,17 +736,22 @@ void Image::ApplyGaussianFilter(GaussianKernel2D& kernel) {
 	std::fill(histogramT, histogramT + 256, 0);
 	histogramMaxT = 0;
 
-	for (int i = halfSize; i < height - halfSize; ++i)
+
+	auto start = high_resolution_clock::now();
+
+	for (int i = 0; i < height; ++i)
 	{
-		for (int j = halfSize; j < width - halfSize; ++j)
+		for (int j = 0; j < width; ++j)
 		{
 			float val = 0.0f;
 			for (int y = -halfSize; y <= halfSize; ++y)
 			{
 				for (int x = -halfSize; x <= halfSize; ++x)
 				{
+					//if (!RangeCheck(j - x, i - y)) continue;
 					float k = kernelPtr[x + halfSize + (y + halfSize) * size];
-					val += data[(i - y) * width + j - x] * k;
+
+					val += data[std::clamp(i - y, 0, height - 1) * width + std::clamp(j - x, 0, width - 1)] * k;
 				}
 			}
 			dataT[i * width + j] = val;
@@ -747,6 +760,12 @@ void Image::ApplyGaussianFilter(GaussianKernel2D& kernel) {
 			histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
 		}
 	}
+
+
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+
+	std::cout << "Gaussian filter:             " << duration.count() << " [ms]\n";
 
 	// Update CDF
 	UpdateTransformedCDF();
@@ -764,31 +783,33 @@ void Image::ApplySeparableGaussianFilter(GaussianKernel1D& kernel) {
 	std::fill(histogramT, histogramT + 256, 0);
 	histogramMaxT = 0;
 
-	// along y direction
-	for (int i = halfSize; i < height - halfSize; ++i)
+	auto start = high_resolution_clock::now();
+
+	// convolve separable along y direction
+	for (int i = 0; i < height; ++i)
 	{
-		for (int j = halfSize; j < width - halfSize; ++j)
+		for (int j = 0; j < width; ++j)
 		{
 			float val = 0.0f;
 			for (int y = -halfSize; y <= halfSize; ++y)
 			{
 				float k = kernelPtr[y + halfSize];
-				val += data[(i - y) * width + j] * k;
+				val += data[std::clamp((i - y), 0, height - 1) * width + j] * k;
 			}
 			tmpDataT[i * width + j] = val;
 		}
 	}
 
-	// along x direction
-	for (int i = halfSize; i < height - halfSize; ++i)
+	// convolve separable along x direction
+	for (int i = 0; i < height; ++i)
 	{
-		for (int j = halfSize; j < width - halfSize; ++j)
+		for (int j = 0; j < width; ++j)
 		{
 			float val = 0.0f;
 			for (int x = -halfSize; x <= halfSize; ++x)
 			{
 				float k = kernelPtr[x + halfSize];
-				val += tmpDataT[i * width + j - x] * k;
+				val += tmpDataT[i * width + std::clamp(j - x, 0, width - 1)] * k;
 			}
 			dataT[i * width + j] = val;
 			int brightness = static_cast<int>(255.99f * dataT[i * width + j]);
@@ -797,6 +818,30 @@ void Image::ApplySeparableGaussianFilter(GaussianKernel1D& kernel) {
 		}
 	}
 
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+
+	std::cout << "Gaussian filter (separable): " << duration.count() << " [ms]\n";
+
+	// Update CDF
+	UpdateTransformedCDF();
+}
+
+
+void Image::OriginalImage()
+{
+	std::fill(histogramT, histogramT + 256, 0);
+	histogramMaxT = 0;
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			dataT[i * width + j] = data[i * width + j];
+			int brightness = static_cast<int>(255.99f * dataT[i * width + j]);
+			histogramT[brightness] += 1;
+			histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
+		}
+	}
 	// Update CDF
 	UpdateTransformedCDF();
 }

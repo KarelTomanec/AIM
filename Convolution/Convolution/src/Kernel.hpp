@@ -5,10 +5,17 @@
 
 class GaussianKernel2D {
 public:
-	GaussianKernel2D(int kernelSize = 5, float sigma = 1.0f) {
-		int halfSize{ kernelSize / 2 };
-		size = kernelSize;
-		kernel = new float[kernelSize * kernelSize];
+	GaussianKernel2D(float sigma = 1.0f, int kernelSize = 0) {
+		int halfSize;
+		if(kernelSize == 0) { 
+			halfSize = getKernelHalfWidth(sigma);
+		}
+		else
+		{
+			halfSize = kernelSize / 2;
+		}
+		size = halfSize * 2 + 1;
+		kernel = new float[size * size];
 
 		float sum{ 0.0f };
 
@@ -21,20 +28,18 @@ public:
 			for (int x{ -halfSize }; x <= halfSize; ++x)
 			{
 				r = sqrtf(x * x + y * y);
-				kernel[x + halfSize + (y + halfSize) * kernelSize] = expf(-(r * r) / s);
-				sum += kernel[x + halfSize + (y + halfSize) * kernelSize];
+				kernel[x + halfSize + (y + halfSize) * size] = expf(-(r * r) / s);
+				sum += kernel[x + halfSize + (y + halfSize) * size];
 			}
 		}
 
 		// Normalize kernel
-		for (int y{ 0 }; y < kernelSize; ++y)
+		for (int y{ 0 }; y < size; ++y)
 		{
-			for (int x{ 0 }; x < kernelSize; ++x)
+			for (int x{ 0 }; x < size; ++x)
 			{
-				kernel[x + y * kernelSize] /= sum;
-				//std::cout << kernel[x + y * kernelSize] << " ";
+				kernel[x + y * size] /= sum;
 			}
-			//std::cout << "\n";
 		}
 	}
 
@@ -51,6 +56,12 @@ public:
 	}
 
 private:
+
+	int getKernelHalfWidth(float sigma)
+	{
+		return roundf(2.5f * sigma - 0.5f);
+	}
+
 	float* kernel;
 	int size;
 
@@ -58,10 +69,20 @@ private:
 
 class GaussianKernel1D {
 public:
-	GaussianKernel1D(int kernelSize = 5, float sigma = 1.0f) {
-		int halfSize{ kernelSize / 2 };
-		size = kernelSize;
-		kernel = new float[kernelSize];
+	GaussianKernel1D(float sigma = 1.0f, int kernelSize = 0) {
+		int halfSize;
+
+		if (kernelSize == 0)
+		{
+			halfSize = getKernelHalfWidth(sigma);
+		}
+		else
+		{
+			halfSize = kernelSize / 2;
+		}
+
+		size = halfSize * 2 + 1;
+		kernel = new float[size];
 
 		float sum{ 0.0f };
 
@@ -71,14 +92,14 @@ public:
 		// Generate kernel
 		for (int x{ -halfSize }; x <= halfSize; ++x)
 		{
-			r = sqrtf(x * x);
+			r = x;
 			kernel[x + halfSize] = expf(-(r * r) / s);
 			sum += kernel[x + halfSize];
 		}
 
 		// Normalize kernel
 
-		for (int x{ 0 }; x < kernelSize; ++x)
+		for (int x{ 0 }; x < size; ++x)
 		{
 			kernel[x] /= sum;
 			std::cout << kernel[x] << " ";
@@ -99,6 +120,12 @@ public:
 	}
 
 private:
+
+	int getKernelHalfWidth(float sigma)
+	{
+		return roundf(2.5f * sigma - 0.5f);
+	}
+
 	float* kernel;
 	int size;
 

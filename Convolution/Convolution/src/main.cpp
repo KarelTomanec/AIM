@@ -13,8 +13,8 @@ Image img("../Resources/Lenna.png");
 //Image img("../Resources/circle.png");
 //Image img("../Resources/square.png");
 
-GaussianKernel2D gaussianKernel2D{5, 2.0f};
-GaussianKernel1D gaussianKernel1D{5, 2.0f};
+GaussianKernel2D gaussianKernel2D{3.0f};
+GaussianKernel1D gaussianKernel1D{3.0f};
 
 std::unique_ptr<Color3[]> pixelBuffer;
 
@@ -116,11 +116,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         img.ApplySeparableGaussianFilter(gaussianKernel1D);
         updatePixelBuffer();
     }
+
+    if (key == GLFW_KEY_O && action == GLFW_PRESS)
+    {
+        img.OriginalImage();
+        updatePixelBuffer();
+    }
+
 }
 
 int main() {
 
     std::cout << "Keyboard controls:" << std::endl;
+    std::cout << "[O] Original image" << std::endl;
     std::cout << "[T] Threshold" << std::endl;
     std::cout << "[G] Gamma correction" << std::endl;
     std::cout << "[E] Histogram equalization" << std::endl;
@@ -130,7 +138,7 @@ int main() {
     std::cout << "[F] Fourier transform" << std::endl;
     std::cout << "[H] High-pass filtering" << std::endl;
     std::cout << "[L] Low-pass filtering" << std::endl;
-    std::cout << "[A] Remove artifacts (cameraman picture)" << std::endl;
+    //std::cout << "[A] Remove artifacts (cameraman picture)" << std::endl;
     std::cout << "[S] Save transformed image" << std::endl;
     std::cout << "[W] Apply gaussian filter" << std::endl;
     std::cout << "[P] Apply separable gaussian filter" << std::endl;

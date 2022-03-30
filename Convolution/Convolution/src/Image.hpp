@@ -161,6 +161,11 @@ public:
 
 	void ApplySeparableGaussianFilter(GaussianKernel1D& kernel);
 
+	bool RangeCheck(int x, int y);
+
+
+	void OriginalImage();
+
 private:
 
 	/// <summary>
