@@ -13,8 +13,8 @@ Image img("../Resources/Lenna.png");
 //Image img("../Resources/circle.png");
 //Image img("../Resources/square.png");
 
-GaussianKernel2D gaussianKernel2D{3.0f};
-GaussianKernel1D gaussianKernel1D{3.0f};
+GaussianKernel2D gaussianKernel2D{30.0f};
+GaussianKernel1D gaussianKernel1D{30.0f};
 
 std::unique_ptr<Color3[]> pixelBuffer;
 

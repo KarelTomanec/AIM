@@ -77,7 +77,7 @@ void Image::SaveHDR(const char* fileName) {
 }
 
 void Image::SavePNG(const char* fileName) {
-	stbi_write_png(fileName, width, height, componentsPerPixel, reinterpret_cast<float*>(dataT.get()), componentsPerPixel * width);
+	stbi_write_png(fileName, width, height, 1, reinterpret_cast<float*>(dataT.get()), width);
 }
 
 int Image::Width() {
