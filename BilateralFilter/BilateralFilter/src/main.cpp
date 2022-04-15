@@ -8,6 +8,7 @@
 
 // Load image
 Image img("../Resources/Lenna.png");
+//Image img("../Resources/cornell.png");
 //Image img("../Resources/test.png");
 //Image img("../Resources/5_cam_original.png");
 //Image img("../Resources/5_input_cam.png");
@@ -17,7 +18,9 @@ Image img("../Resources/Lenna.png");
 int bKernelSize = 11;
 int iterations = 1;
 float sigmaG = 2.6f;
-float sigmaB = 0.1f;
+float sigmaB = 0.3f;
+//float sigmaG = 2.6f;
+//float sigmaB = 0.2f;
 
 GaussianKernel2D gaussianKernel2D{30.0f};
 GaussianKernel1D gaussianKernel1D{30.0f};

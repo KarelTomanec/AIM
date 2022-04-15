@@ -868,40 +868,48 @@ void Image::ApplyBilateralFilter(float sigmaG, float sigmaB, int iterations = 1)
 {
 	int halfSize = roundf(2.5f * sigmaG - 0.5f);
 
-	std::fill(histogramT, histogramT + 256, 0);
-	histogramMaxT = 0;
 
+	std::unique_ptr<float[]> dataTmp = std::make_unique<float[]>(width * height);
+	memcpy(dataTmp.get(), data.get(), width * height * sizeof(float));
 
 	auto start = high_resolution_clock::now();
 
-	for (int i = 0; i < height; ++i)
+	for (int it = 0; it < iterations; ++it)
 	{
-#pragma omp parallel
-		for (int j = 0; j < width; ++j)
+		std::fill(histogramT, histogramT + 256, 0);
+		histogramMaxT = 0;
+		for (int i = 0; i < height; ++i)
 		{
-			float val = 0.0f;
-			float wp = 0.0f;
-			for (int y = -halfSize; y <= halfSize; ++y)
+#pragma omp parallel
+			for (int j = 0; j < width; ++j)
 			{
-				for (int x = -halfSize; x <= halfSize; ++x)
+				float val = 0.0f;
+				float wp = 0.0f;
+				for (int y = -halfSize; y <= halfSize; ++y)
 				{
-					float g = Gaussian(Distance2D(i - y, j - x, i, j), sigmaG);
-					float b = Gaussian(
-							data[std::clamp(i - y, 0, height - 1) * width + std::clamp(j - x, 0, width - 1)] -
-							data[i * width + j]
-						, 
-					sigmaB);
-					float w = g * b;
-					val += data[std::clamp(i - y, 0, height - 1) * width + std::clamp(j - x, 0, width - 1)] * w;
-					wp += w;
+					for (int x = -halfSize; x <= halfSize; ++x)
+					{
+						float g = Gaussian(Distance2D(i - y, j - x, i, j), sigmaG);
+						float b = Gaussian(
+							logf(dataTmp[std::clamp(i - y, 0, height - 1) * width + std::clamp(j - x, 0, width - 1)]) -
+							logf(dataTmp[i * width + j])
+							,
+							sigmaB);
+						float w = g * b;
+						val += dataTmp[std::clamp(i - y, 0, height - 1) * width + std::clamp(j - x, 0, width - 1)] * w;
+						wp += w;
+					}
 				}
+				dataT[i * width + j] = val / wp;
+				int brightness = static_cast<int>(255.99f * dataT[i * width + j]);
+				histogramT[brightness] += 1;
+				histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
 			}
-			dataT[i * width + j] = val / wp;
-			int brightness = static_cast<int>(255.99f * dataT[i * width + j]);
-			histogramT[brightness] += 1;
-			histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
+
+			memcpy(dataTmp.get(), dataT.get(), width * height * sizeof(float));
 		}
 	}
+
 
 
 	auto stop = high_resolution_clock::now();
