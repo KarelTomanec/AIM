@@ -19,8 +19,6 @@ int bKernelSize = 11;
 int iterations = 1;
 float sigmaG = 2.6f;
 float sigmaB = 0.3f;
-//float sigmaG = 2.6f;
-//float sigmaB = 0.2f;
 
 GaussianKernel2D gaussianKernel2D{30.0f};
 GaussianKernel1D gaussianKernel1D{30.0f};
@@ -95,8 +93,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         updatePixelBuffer();
     }
     if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-        img.SaveHDR("../Resources/output.hdr");
-        std::cout << "Transformed image saved as 'output.hdr'\n";
+        img.SavePNG("../Resources/output.png");
+        std::cout << "Transformed image saved as 'output.png'\n";
     }
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
         img.FFT();

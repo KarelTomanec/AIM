@@ -9,9 +9,9 @@
 // Load image
 //Image img("../Resources/Lenna.png");
 //Image img("../Resources/5_cam_original.png");
-Image img("../Resources/5_input_cam.png");
+//Image img("../Resources/5_input_cam.png");
 //Image img("../Resources/circle.png");
-//Image img("../Resources/square.png");
+Image img("../Resources/square.png");
 
 std::unique_ptr<Color3[]> pixelBuffer;
 
@@ -83,8 +83,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         updatePixelBuffer();
     }
     if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-        img.SaveHDR("../Resources/output.hdr");
-        std::cout << "Transformed image saved as 'output.hdr'\n";
+        img.SavePNG("../Resources/output.png");
+        std::cout << "Transformed image saved as 'output.png'\n";
     }
     if (key == GLFW_KEY_F && action == GLFW_PRESS) {
         img.FFT();

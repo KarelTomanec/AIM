@@ -77,7 +77,20 @@ void Image::SaveHDR(const char* fileName) {
 }
 
 void Image::SavePNG(const char* fileName) {
-	stbi_write_png(fileName, width, height, 1, reinterpret_cast<float*>(dataT.get()), width);
+	// Flip vertically
+	char* tmp = new char[width * height * 3];
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			char val = dataT[(height - i - 1) * width + j] * 255;
+			tmp[(i * width + j) * 3] = val;
+			tmp[(i * width + j) * 3 + 1] = val;
+			tmp[(i * width + j) * 3 + 2] = val;
+		}
+	}
+	stbi_write_png(fileName, width, height, 3, static_cast<void*>(tmp), width * 3);
+	delete[] tmp;
 }
 
 int Image::Width() {

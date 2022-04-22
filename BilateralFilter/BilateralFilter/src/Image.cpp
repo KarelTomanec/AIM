@@ -21,6 +21,9 @@ Image::Image(const char* fileName) {
 	data = std::unique_ptr<float[]>(reinterpret_cast<float*>(stbi_loadf(
 		fileName, &width, &height, &componentsPerPixel, 1)));
 
+
+	//stbi_write_png("../Resources/testik.png", width, height, 1 * sizeof(float), reinterpret_cast<float*>(data.get()), sizeof(float) * width);
+
 	if (!data) {
 		std::cerr << "ERROR: Could not load texture image file '" << fileName << "'.\n";
 		width = height = 0;
@@ -79,7 +82,20 @@ void Image::SaveHDR(const char* fileName) {
 }
 
 void Image::SavePNG(const char* fileName) {
-	stbi_write_png(fileName, width, height, 1, reinterpret_cast<float*>(dataT.get()), width);
+	// Flip vertically
+	char* tmp = new char[width * height * 3];
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			char val = dataT[(height - i - 1) * width + j] * 255;
+			tmp[(i * width + j) * 3] = val;
+			tmp[(i * width + j) * 3 + 1] = val;
+			tmp[(i * width + j) * 3 + 2] = val;
+		}
+	}
+	stbi_write_png(fileName, width, height, 3, static_cast<void*>(tmp), width * 3);
+	delete[] tmp;
 }
 
 int Image::Width() {
