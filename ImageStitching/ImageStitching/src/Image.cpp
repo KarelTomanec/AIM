@@ -1067,6 +1067,22 @@ void Image::ImageStitching(Image& img2)
 
 	dataT = std::unique_ptr<float[]>(finalImage);
 
+	// Update histogram and CDF
+
+	std::fill(histogramT, histogramT + 256, 0);
+	histogramMaxT = 0;
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			int brightness = static_cast<int>(255.99f * dataT[i * width + j]);
+			histogramT[brightness] += 1;
+			histogramMaxT = std::max(histogramMaxT, histogramT[brightness]);
+		}
+	}
+	// Update CDF
+	UpdateTransformedCDF();
+
 	delete[] modifiedGradientsX;
 	delete[] modifiedGradientsY;
 
