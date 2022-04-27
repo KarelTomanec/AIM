@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Vector3.hpp"
-#include "Kernel.hpp"
 
 /// <summary>
 /// Class representing RGB image.
@@ -9,11 +8,13 @@
 class Image {
 public:
 
+	Image(Color3* data, int width, int height);
+
 	/// <summary>
 	/// Load image using stb_image library, make it grayscale and store it as Vector3 array. This constructor also creates a CDF.
 	/// </summary>
 	/// <param name="fileName">file path</param>
-	Image(const char* fileName);
+	Image(const char* fileName, bool grayScale = false);
 
 	/// <summary>
 	/// Not copyable or movable
@@ -22,8 +23,6 @@ public:
 	void operator=(const Image&) = delete;
 	Image(Image&&) = delete;
 	Image& operator=(Image&&) = delete;
-
-	Image(float* data, int width, int height);
 
 	/// <summary>
 	/// Save transformed image as HDR file.
@@ -53,7 +52,7 @@ public:
 	/// Return pointer do the original image array.
 	/// </summary>
 	/// <returns>data pointer</returns>
-	float* DataPtr();
+	Color3* DataPtr();
 
 	/// <summary>
 	/// Get RGB value of the original image at a given position
@@ -61,7 +60,7 @@ public:
 	/// <param name="x">horizontal position</param>
 	/// <param name="y">vertical position</param>
 	/// <returns>RGB value</returns>
-	float Lookup(int x, int y);
+	Color3 Lookup(int x, int y);
 
 	/// <summary>
 	/// Get RGB value of the original image at a given position
@@ -69,7 +68,7 @@ public:
 	/// <param name="x">horizontal position</param>
 	/// <param name="y">vertical position</param>
 	/// <returns>RGB value</returns>
-	float LookupT(int x, int y);
+	Color3 LookupT(int x, int y);
 
 	/// <summary>
 	/// Return the number of pixels of a given intensity of the original image.
@@ -141,37 +140,8 @@ public:
 	/// </summary>
 	void NonLinearContrast();
 
-	/// <summary>
-	/// Perform fourier transform on the original image and store it to the transformed image.
-	/// </summary>
-	void FFT();
 
-	/// <summary>
-	/// Perform high-pass filtering on the original image and store it to the transformed image.
-	/// </summary>
-	void HighPassFilter();
-
-	/// <summary>
-	/// Perform low-pass filtering on the original image and store it to the transformed image.
-	/// </summary>
-	void LowPassFilter();
-
-
-	void RemoveArtifactsCameraMan();
-
-	void ApplyGaussianFilter(GaussianKernel2D& kernel);
-
-	void ApplySeparableGaussianFilter(GaussianKernel1D& kernel);
-
-	bool RangeCheck(int x, int y);
-
-
-	void OriginalImage();
-
-	void ApplyBilateralFilter(float sigmaG, float sigmaB, int iterations);
-
-
-	float* ReconstructImage(float* gradientX, float* gradientY);
+	Color3* ReconstructImage(Color3* gradientX, Color3* gradientY, Image& img2);
 
 	void ImageStitching(Image& img);
 
@@ -191,7 +161,7 @@ private:
 	int histogramMaxT; // Maximum in the histogram of the transformed image
 	int width; // Image width
 	int height; // Image height
-	std::unique_ptr<float[]> data; // Pointer to the original image data
-	std::unique_ptr<float[]> dataT; // Pointer to the transformed image data
+	std::unique_ptr<Color3[]> data; // Pointer to the original image data
+	std::unique_ptr<Color3[]> dataT; // Pointer to the transformed image data
 
 };
