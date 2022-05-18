@@ -7,9 +7,19 @@
 
 // Load image
 bool grayScale = false;
-//Image img("../Resources/Lenna.png", grayScale);
-Image img("../Resources/s1.png", grayScale);
-Image img1("../Resources/s2.png", grayScale);
+
+//Image img("../Resources/samoyed.jpeg", grayScale);
+//Image img1("../Resources/samoyed_brush.png", grayScale);
+
+//Image img("../Resources/sima.jpg", grayScale);
+//Image img1("../Resources/sima_brush.png", grayScale);
+
+Image img("../Resources/llama.jpg", grayScale);
+Image img1("../Resources/llama_brush.png", grayScale);
+
+//Image img("../Resources/car.png", grayScale);
+//Image img1("../Resources/car_brush.png", grayScale);
+
 
 std::unique_ptr<Color3[]> pixelBuffer;
 
@@ -19,9 +29,9 @@ void updatePixelBuffer() {
     {
         for (int j = 0; j < img.Width(); j++)
         {
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()].x = std::sqrtf(img.LookupT(j, i).x);
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()].y = std::sqrtf(img.LookupT(j, i).y);
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()].z = std::sqrtf(img.LookupT(j, i).z);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j + img.Width()].x = std::sqrtf(img.LookupT(j, i).x);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j + img.Width()].y = std::sqrtf(img.LookupT(j, i).y);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j + img.Width()].z = std::sqrtf(img.LookupT(j, i).z);
         }
     }
     // Clear transformed histogram area
@@ -90,7 +100,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_I && action == GLFW_PRESS)
     {
 
-        img.ImageStitching(img1);
+        img.Segmentation(img1);
         updatePixelBuffer();
     }
 
@@ -106,7 +116,7 @@ int main() {
     std::cout << "[Q] Quantization" << std::endl;
     std::cout << "[C] Non-linear contrast" << std::endl;
     std::cout << "[S] Save transformed image" << std::endl;
-    std::cout << "[I] Image stitching" << std::endl;
+    std::cout << "[I] Image segmentation" << std::endl;
     
     pixelBuffer = std::make_unique<Color3[]>((2 * img.Width()) * (1.5 * img.Height()));
 
@@ -169,12 +179,12 @@ int main() {
     {
         for (int j = 0; j < img.Width(); j++)
         {
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j].x = std::sqrtf(img.Lookup(j, i).x);
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j].y = std::sqrtf(img.Lookup(j, i).y);
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j].z = std::sqrtf(img.Lookup(j, i).z);
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()].x = std::sqrtf(img.LookupT(j, i).x);
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()].y = std::sqrtf(img.LookupT(j, i).y);
-            pixelBuffer[int(img.Height()) * img.Width() + i * 2 * img.Width() + j + img.Width()].z = std::sqrtf(img.LookupT(j, i).z);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j].x = std::sqrtf(img.Lookup(j, i).x);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j].y = std::sqrtf(img.Lookup(j, i).y);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j].z = std::sqrtf(img.Lookup(j, i).z);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j + img.Width()].x = std::sqrtf(img.LookupT(j, i).x);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j + img.Width()].y = std::sqrtf(img.LookupT(j, i).y);
+            pixelBuffer[img.Height() * img.Width() + i * 2 * img.Width() + j + img.Width()].z = std::sqrtf(img.LookupT(j, i).z);
         }
     }
 
