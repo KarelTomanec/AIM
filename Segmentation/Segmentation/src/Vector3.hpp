@@ -68,11 +68,12 @@ public:
 		return *this;
 	}
 
-	float Y() {
+	float Y() const 
+	{
 		return 0.2126f * x + 0.7152f * y + 0.0722f * z;
 	}
 
-	inline float Average()
+	inline float Average() const
 	{
 		return (x + y + z) / 3.0f;
 	}

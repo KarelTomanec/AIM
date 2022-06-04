@@ -14,11 +14,14 @@ bool grayScale = false;
 //Image img("../Resources/sima.jpg", grayScale);
 //Image img1("../Resources/sima_brush.png", grayScale);
 
-Image img("../Resources/llama.jpg", grayScale);
-Image img1("../Resources/llama_brush.png", grayScale);
+//Image img("../Resources/llama.jpg", grayScale);
+//Image img1("../Resources/llama_brush.png", grayScale);
 
 //Image img("../Resources/car.png", grayScale);
 //Image img1("../Resources/car_brush.png", grayScale);
+
+Image img("../Resources/kluk.png", grayScale);
+Image img1("../Resources/kluk_brush.png", grayScale);
 
 
 std::unique_ptr<Color3[]> pixelBuffer;
