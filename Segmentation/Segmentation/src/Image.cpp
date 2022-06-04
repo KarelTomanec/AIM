@@ -8,7 +8,7 @@
 
 
 #include <GridGraph_2D_8C.h>
-const float C{ 10.0f };
+const float K{ 4000.0f };
 const Color3 RED{ 1.f, 0.f, 0.f };
 const Color3 BLUE{ 0.f, 0.f, 1.f };
 
@@ -466,80 +466,45 @@ void Image::ImageStitching(Image& img2)
 
 void Image::Segmentation(const Image& img)
 {
-    typedef GridGraph_2D_8C<float, float, float> Grid;
+    typedef GridGraph_2D_8C<int, int, int> Grid;
 
     Grid* grid = new Grid(width, height);
 
-    //float beta = 0.0f;
-    //for (int i = 0; i < height; i++)
-    //{
-    //    for (int j = 0; j < width; j++)
-    //    {
-    //        if (j < width - 1)
-    //        {
-    //            float distSq = SquaredLength(Lookup(j, i) - Lookup(j + 1, i));
-    //            beta += distSq;
-    //        }
-
-    //        if (i < height - 1)
-    //        {
-    //            float distSq = SquaredLength(Lookup(j, i) - Lookup(j, i + 1));
-    //            beta += distSq;
-    //        }
-    //    }
-    //}
-
-    //beta /= width * height;
-
-    //auto weight = [](float rgbDist, float euclDist, float beta)
-    //{
-    //    const float lambda1 = 5.f;
-    //    const float lambda2 = 2000000.f;
-    //    return lambda1 + (lambda2 / euclDist) * std::exp(-rgbDist / ( beta));
-    //};
-
-    auto weight = [](const Vector3& rgb1, const Vector3& rgb2)
+    auto weight = [](const Vector3& rgb1, const Vector3& rgb2, float dist)
     {
-        const float gamma = 0.8f;
-        return 1.0f + std::powf(std::min(rgb1.Average(), rgb2.Average()), gamma);
+        const float gamma = 2.0f;
+        return 1.0f + K * std::powf(std::min(rgb1.Average(), rgb2.Average()) / dist, gamma);
     };
 
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
         {
-            grid->set_terminal_cap(grid->node_id(j, i), img.LookupT(j, i).z == 1 ? C : 0, img.LookupT(j, i).x == 1 ? C : 0);
+            grid->set_terminal_cap(grid->node_id(j, i), img.LookupT(j, i).z == 1 ? K : 0, img.LookupT(j, i).x == 1 ? K : 0);
 
             if (j < width - 1)
             {
-                //const int cap = weight(SquaredLength(Lookup(j, i) - Lookup(j + 1, i)), 1, beta);
-                const float cap = weight(Lookup(j, i), Lookup(j + 1, i));
+                const float cap = weight(Lookup(j, i), Lookup(j + 1, i), 1);
                 grid->set_neighbor_cap(grid->node_id(j, i),      1, 0, cap);
                 grid->set_neighbor_cap(grid->node_id(j + 1, i), -1, 0, cap);
             }
 
             if (i < height - 1)
             {
-                //const int cap = weight(SquaredLength(Lookup(j, i) - Lookup(j, i + 1)), 1, beta);
-                const float cap = weight(Lookup(j, i), Lookup(j, i + 1));
-
+                const int cap = weight(Lookup(j, i), Lookup(j, i + 1), 1);
                 grid->set_neighbor_cap(grid->node_id(j, i),     0,  1, cap);
                 grid->set_neighbor_cap(grid->node_id(j, i + 1), 0, -1, cap);
             }
 
             if (j < width - 1 && i < height - 1)
             {
-                //const int cap = weight(SquaredLength(Lookup(j, i) - Lookup(j + 1, i + 1)), SQRT2, beta);
-                const float cap = weight(Lookup(j, i), Lookup(j + 1, i + 1));
-
+                const int cap = weight(Lookup(j, i), Lookup(j + 1, i + 1), SQRT2);
                 grid->set_neighbor_cap(grid->node_id(j, i), 1, 1, cap);
                 grid->set_neighbor_cap(grid->node_id(j + 1, i + 1), -1, -1, cap);
             }
             if (j > 0 && i < height - 1)
             {
-                //const int cap = weight(SquaredLength(Lookup(j, i) - Lookup(j - 1, i + 1)), SQRT2, beta);
-                const float cap = weight(Lookup(j, i), Lookup(j - 1, i + 1));
-
+                const int cap = weight(Lookup(j, i), Lookup(j - 1, i + 1), SQRT2);
                 grid->set_neighbor_cap(grid->node_id(j, i), -1, 1, cap);
                 grid->set_neighbor_cap(grid->node_id(j - 1, i + 1), 1, -1, cap);
             }
@@ -553,7 +518,6 @@ void Image::Segmentation(const Image& img)
         for (int j = 0; j < width; j++)
         {
             dataT[i * width + j] = data[i * width + j] * (grid->get_segment(grid->node_id(j, i)) ? RED : BLUE);
-            //dataT[i * width + j] = data[i * width + j] * (grid->get_segment(grid->node_id(j, i)) ? Vector3(.25, 1.f, .25) : 1);
         }
     }
 
